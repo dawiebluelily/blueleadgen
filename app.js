@@ -1,14 +1,15 @@
-const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbyClE0Hl_ZNRM7YY4BKXSeXaDs8V7F5LKS7EBTizvPXfTtI7pvF6fjq87_fud6ccxCC/exec';
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbxn6P8SyHgjsota2995OALezJ2GP4dogisHDZuTk_QudbGNg0xAJx9U1EJcFp0qna5I/exec';
 
 const state = {
   meta: null,
   leads: []
 };
 
-const els = {
+const el = {
   apiUrl: document.getElementById('apiUrl'),
   saveApiBtn: document.getElementById('saveApiBtn'),
   syncBtn: document.getElementById('syncBtn'),
+  connectionStatus: document.getElementById('connectionStatus'),
   searchInput: document.getElementById('searchInput'),
   suburbFilter: document.getElementById('suburbFilter'),
   streetFilter: document.getElementById('streetFilter'),
@@ -16,106 +17,72 @@ const els = {
   agencyFilter: document.getElementById('agencyFilter'),
   statusFilter: document.getElementById('statusFilter'),
   intentFilter: document.getElementById('intentFilter'),
-  assignedToFilter: document.getElementById('assignedToFilter'),
-  searchBtn: document.getElementById('searchBtn'),
-  resetBtn: document.getElementById('resetBtn'),
-  leadGrid: document.getElementById('leadGrid'),
-  totalLeads: document.getElementById('totalLeads'),
-  newLeads: document.getElementById('newLeads'),
-  followLeads: document.getElementById('followLeads'),
-  removeLeads: document.getElementById('removeLeads'),
-  subTitle: document.getElementById('subTitle')
+  assignedFilter: document.getElementById('assignedFilter'),
+  loadBtn: document.getElementById('loadBtn'),
+  clearBtn: document.getElementById('clearBtn'),
+  heroText: document.getElementById('heroText'),
+  statTotal: document.getElementById('statTotal'),
+  statNew: document.getElementById('statNew'),
+  statFollow: document.getElementById('statFollow'),
+  statRemove: document.getElementById('statRemove'),
+  cards: document.getElementById('cards'),
+  cardTemplate: document.getElementById('cardTemplate')
 };
 
+function setStatus(message, isError = false) {
+  el.connectionStatus.textContent = message;
+  el.connectionStatus.style.color = isError ? '#b42318' : '#6a879d';
+}
+
 function restoreApiUrl() {
-  const saved = localStorage.getItem('blueLilyApiUrl') || DEFAULT_API_URL;
-  els.apiUrl.value = saved;
+  const saved = localStorage.getItem('blueLilyFunctionalApiUrl') || DEFAULT_API_URL;
+  el.apiUrl.value = saved;
 }
 
 function saveApiUrl() {
-  const value = els.apiUrl.value.trim() || DEFAULT_API_URL;
-  localStorage.setItem('blueLilyApiUrl', value);
-  els.apiUrl.value = value;
+  const value = el.apiUrl.value.trim() || DEFAULT_API_URL;
+  localStorage.setItem('blueLilyFunctionalApiUrl', value);
+  el.apiUrl.value = value;
 }
 
-async function apiRequest(payload) {
-  const url = els.apiUrl.value.trim();
-  if (!url) throw new Error('Missing Apps Script URL');
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
+async function getRequest(params = {}) {
+  const base = el.apiUrl.value.trim();
+  if (!base) throw new Error('Missing Apps Script URL');
+  const url = new URL(base);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) url.searchParams.set(key, value);
   });
-
+  const res = await fetch(url.toString());
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || 'Request failed');
   return data;
 }
 
-function fillSelect(selectEl, items, defaultText) {
-  const current = selectEl.value;
-  selectEl.innerHTML = `<option value="">${defaultText}</option>`;
+async function postRequest(payload = {}) {
+  const url = el.apiUrl.value.trim();
+  if (!url) throw new Error('Missing Apps Script URL');
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function fillSelect(select, items, placeholder) {
+  const current = select.value;
+  select.innerHTML = `<option value="">${placeholder}</option>`;
   (items || []).forEach(item => {
-    const opt = document.createElement('option');
-    opt.value = item;
-    opt.textContent = item;
-    selectEl.appendChild(opt);
+    const option = document.createElement('option');
+    option.value = item;
+    option.textContent = item;
+    select.appendChild(option);
   });
-  if ([...selectEl.options].some(o => o.value === current)) {
-    selectEl.value = current;
+  if ([...select.options].some(o => o.value === current)) {
+    select.value = current;
   }
-}
-
-async function loadMeta() {
-  const data = await apiRequest({ action: 'getMeta' });
-  state.meta = data;
-
-  fillSelect(els.suburbFilter, data.suburbs, 'All suburbs');
-  fillSelect(els.streetFilter, data.streets, 'All streets');
-  fillSelect(els.complexFilter, data.complexes, 'All complexes');
-  fillSelect(els.agencyFilter, data.agencies, 'All agencies');
-  fillSelect(els.statusFilter, data.statuses, 'All statuses');
-  fillSelect(els.intentFilter, data.intents, 'All intents');
-  fillSelect(els.assignedToFilter, data.assignedTo, 'All agents');
-
-  if (data.brand?.companyName) {
-    els.subTitle.textContent = `Connected to ${data.brand.companyName}.`;
-  }
-}
-
-async function loadLeads() {
-  const data = await apiRequest({
-    action: 'getLeads',
-    q: els.searchInput.value.trim(),
-    suburb: els.suburbFilter.value,
-    street: els.streetFilter.value,
-    complex: els.complexFilter.value,
-    agency: els.agencyFilter.value,
-    status: els.statusFilter.value,
-    assignedTo: els.assignedToFilter.value,
-    intent: els.intentFilter.value
-  });
-
-  state.leads = data.leads || [];
-  renderStats();
-  renderLeads();
-}
-
-function renderStats() {
-  const leads = state.leads;
-  els.totalLeads.textContent = leads.length;
-  els.newLeads.textContent = leads.filter(l => (l.status || '').toLowerCase() === 'new').length;
-  els.followLeads.textContent = leads.filter(l => (l.status || '').toLowerCase() === 'follow up').length;
-  els.removeLeads.textContent = leads.filter(l => ((l.status || '').toLowerCase() === 'remove from database') || ((l.intent || '').toLowerCase() === 'remove from database')).length;
-}
-
-function leadAddress(lead) {
-  return lead.address || [lead.complex, lead.street, lead.suburb].filter(Boolean).join(', ') || 'No address loaded';
-}
-
-function metaBlock(label, value) {
-  return `<div class="meta-block"><small>${label}</small><div>${escapeHtml(value || '-')}</div></div>`;
 }
 
 function escapeHtml(value) {
@@ -127,58 +94,116 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
-async function buildMessagePreview(lead, senderIdentity) {
-  const data = await apiRequest({
-    action: 'getMessagePreview',
-    name: lead.name,
-    surname: lead.surname,
-    phone: lead.phone,
-    suburb: lead.suburb,
-    street: lead.street,
-    complex: lead.complex,
-    address: lead.address,
-    senderIdentity
-  });
-  return data;
+function getAddress(lead) {
+  return lead.address || [lead.complex, lead.street, lead.suburb].filter(Boolean).join(', ') || 'No address loaded';
 }
 
-function renderLeads() {
+function metaBox(label, value) {
+  return `<div class="meta-box"><small>${label}</small><strong>${escapeHtml(value || '-')}</strong></div>`;
+}
+
+async function loadMeta() {
+  const data = await getRequest({ action: 'getMeta' });
+  state.meta = data;
+  fillSelect(el.suburbFilter, data.suburbs, 'All suburbs');
+  fillSelect(el.streetFilter, data.streets, 'All streets');
+  fillSelect(el.complexFilter, data.complexes, 'All complexes');
+  fillSelect(el.agencyFilter, data.agencies, 'All agencies');
+  fillSelect(el.statusFilter, data.statuses, 'All statuses');
+  fillSelect(el.intentFilter, data.intents, 'All intents');
+  fillSelect(el.assignedFilter, data.assignedTo, 'All agents');
+  el.heroText.textContent = data.brand?.companyName
+    ? `Connected to ${data.brand.companyName}.`
+    : 'Connected to your Blue Lily lead database.';
+}
+
+async function loadLeads() {
+  const data = await getRequest({
+    action: 'getLeads',
+    q: el.searchInput.value.trim(),
+    suburb: el.suburbFilter.value,
+    street: el.streetFilter.value,
+    complex: el.complexFilter.value,
+    agency: el.agencyFilter.value,
+    status: el.statusFilter.value,
+    intent: el.intentFilter.value,
+    assignedTo: el.assignedFilter.value,
+    activeOnly: 'Yes'
+  });
+  state.leads = data.leads || [];
+  renderStats();
+  renderCards();
+}
+
+function renderStats() {
+  const leads = state.leads;
+  el.statTotal.textContent = leads.length;
+  el.statNew.textContent = leads.filter(l => (l.status || '').toLowerCase() === 'new').length;
+  el.statFollow.textContent = leads.filter(l => (l.status || '').toLowerCase() === 'follow up').length;
+  el.statRemove.textContent = leads.filter(l => ((l.status || '').toLowerCase() === 'remove from database') || ((l.intent || '').toLowerCase() === 'remove from database')).length;
+}
+
+async function updatePreview(lead, senderSelect, previewTextarea, waBtn) {
+  try {
+    const data = await getRequest({
+      action: 'getMessagePreview',
+      name: lead.name,
+      surname: lead.surname,
+      phone: lead.phone,
+      suburb: lead.suburb,
+      street: lead.street,
+      complex: lead.complex,
+      address: lead.address,
+      senderIdentity: senderSelect.value || 'Dawie'
+    });
+    previewTextarea.value = data.message || '';
+    waBtn.dataset.url = data.whatsappUrl || '';
+  } catch (err) {
+    previewTextarea.value = 'Could not load WhatsApp script.';
+    waBtn.dataset.url = '';
+  }
+}
+
+function renderCards() {
   if (!state.leads.length) {
-    els.leadGrid.innerHTML = '<div class="empty-state">No leads found for the current filters.</div>';
+    el.cards.innerHTML = '<div class="empty">No contacts found. Try syncing or changing filters.</div>';
     return;
   }
 
-  els.leadGrid.innerHTML = '';
-  const tpl = document.getElementById('leadCardTemplate');
+  el.cards.innerHTML = '';
 
   state.leads.forEach(lead => {
-    const node = tpl.content.cloneNode(true);
-
-    node.querySelector('.lead-name').textContent = lead.fullName || 'Unnamed Lead';
-    node.querySelector('.lead-address').textContent = leadAddress(lead);
-    node.querySelector('.status-pill').textContent = lead.status || 'New';
-
-    node.querySelector('.lead-meta').innerHTML = [
-      metaBlock('Phone', lead.phone),
-      metaBlock('Email', lead.email),
-      metaBlock('Suburb', lead.suburb),
-      metaBlock('Street', lead.street),
-      metaBlock('Complex', lead.complex),
-      metaBlock('Agency', lead.agency),
-      metaBlock('Assigned To', lead.assignedTo),
-      metaBlock('Last Contacted', lead.lastContacted)
-    ].join('');
-
+    const node = el.cardTemplate.content.cloneNode(true);
+    const card = node.querySelector('.card');
+    const name = node.querySelector('.name');
+    const address = node.querySelector('.address');
+    const statusPill = node.querySelector('.status-pill');
+    const metaGrid = node.querySelector('.meta-grid');
     const assignedSelect = node.querySelector('.assigned-select');
     const senderSelect = node.querySelector('.sender-select');
     const intentSelect = node.querySelector('.intent-select');
     const statusSelect = node.querySelector('.status-select');
     const notesInput = node.querySelector('.notes-input');
-    const messagePreview = node.querySelector('.message-preview');
-    const openWaBtn = node.querySelector('.open-wa-btn');
+    const preview = node.querySelector('.message-preview');
+    const waBtn = node.querySelector('.whatsapp-btn');
     const copyBtn = node.querySelector('.copy-btn');
     const saveBtn = node.querySelector('.save-btn');
-    const touchBtn = node.querySelector('.touch-btn');
+    const contactedBtn = node.querySelector('.contacted-btn');
+
+    name.textContent = lead.fullName || 'Unnamed Contact';
+    address.textContent = getAddress(lead);
+    statusPill.textContent = lead.status || 'New';
+
+    metaGrid.innerHTML = [
+      metaBox('Phone', lead.phone),
+      metaBox('Email', lead.email),
+      metaBox('Suburb', lead.suburb),
+      metaBox('Street', lead.street),
+      metaBox('Complex', lead.complex),
+      metaBox('Agency', lead.agency),
+      metaBox('Assigned To', lead.assignedTo),
+      metaBox('Last Contacted', lead.lastContacted)
+    ].join('');
 
     fillSelect(assignedSelect, state.meta?.assignedTo || [], 'Select agent');
     fillSelect(senderSelect, state.meta?.senderIdentity || [], 'Select sender');
@@ -191,90 +216,90 @@ function renderLeads() {
     statusSelect.value = lead.status || 'New';
     notesInput.value = lead.notes || '';
 
-    const refreshPreview = async () => {
-      try {
-        const preview = await buildMessagePreview(lead, senderSelect.value || 'Dawie');
-        messagePreview.value = preview.message || '';
-        openWaBtn.dataset.url = preview.whatsappUrl || '';
-      } catch (err) {
-        messagePreview.value = 'Could not load message preview.';
+    updatePreview(lead, senderSelect, preview, waBtn);
+    senderSelect.addEventListener('change', () => updatePreview(lead, senderSelect, preview, waBtn));
+
+    waBtn.addEventListener('click', () => {
+      const url = waBtn.dataset.url;
+      if (!url) {
+        alert('No WhatsApp link available for this contact.');
+        return;
       }
-    };
-
-    senderSelect.addEventListener('change', refreshPreview);
-    refreshPreview();
-
-    openWaBtn.addEventListener('click', () => {
-      const url = openWaBtn.dataset.url;
-      if (!url) return alert('No WhatsApp link available for this lead.');
       window.open(url, '_blank');
     });
 
     copyBtn.addEventListener('click', async () => {
       try {
-        await navigator.clipboard.writeText(messagePreview.value || '');
-        alert('Message copied.');
+        await navigator.clipboard.writeText(preview.value || '');
+        alert('WhatsApp script copied.');
       } catch {
-        alert('Could not copy the message.');
+        alert('Could not copy the script.');
       }
     });
 
     const saveLead = async (touchLead = false) => {
-      await apiRequest({
+      await postRequest({
         action: 'updateLead',
         rowNumber: lead.rowNumber,
-        status: statusSelect.value,
-        notes: notesInput.value,
         assignedTo: assignedSelect.value,
         senderIdentity: senderSelect.value,
         intent: intentSelect.value,
+        status: statusSelect.value,
+        notes: notesInput.value,
         touchLead
       });
-      await loadMeta();
-      await loadLeads();
-      alert('Lead updated.');
+      setStatus('Lead updated successfully.');
+      await syncAll(false);
     };
 
     saveBtn.addEventListener('click', () => saveLead(false));
-    touchBtn.addEventListener('click', () => saveLead(true));
+    contactedBtn.addEventListener('click', async () => {
+      statusSelect.value = 'Contacted';
+      await saveLead(true);
+    });
 
-    els.leadGrid.appendChild(node);
+    el.cards.appendChild(node);
   });
 }
 
-function resetFilters() {
-  els.searchInput.value = '';
-  els.suburbFilter.value = '';
-  els.streetFilter.value = '';
-  els.complexFilter.value = '';
-  els.agencyFilter.value = '';
-  els.statusFilter.value = '';
-  els.intentFilter.value = '';
-  els.assignedToFilter.value = '';
+function clearFilters() {
+  el.searchInput.value = '';
+  el.suburbFilter.value = '';
+  el.streetFilter.value = '';
+  el.complexFilter.value = '';
+  el.agencyFilter.value = '';
+  el.statusFilter.value = '';
+  el.intentFilter.value = '';
+  el.assignedFilter.value = '';
 }
 
-async function syncAll() {
-  saveApiUrl();
-  await loadMeta();
-  await loadLeads();
+async function syncAll(showMessage = true) {
+  try {
+    saveApiUrl();
+    setStatus('Syncing...');
+    await loadMeta();
+    await loadLeads();
+    if (showMessage) setStatus('Connected and synced.');
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || 'Connection failed.', true);
+    el.cards.innerHTML = '<div class="empty">Connection failed. Check the Apps Script deployment, sharing settings, and sheet tab names.</div>';
+  }
 }
 
-els.saveApiBtn.addEventListener('click', () => {
+el.saveApiBtn.addEventListener('click', () => {
   saveApiUrl();
-  alert('Backend URL saved.');
+  setStatus('Backend URL saved.');
 });
-els.syncBtn.addEventListener('click', syncAll);
-els.searchBtn.addEventListener('click', loadLeads);
-els.resetBtn.addEventListener('click', async () => {
-  resetFilters();
-  await loadLeads();
+el.syncBtn.addEventListener('click', () => syncAll(true));
+el.loadBtn.addEventListener('click', () => loadLeads().catch(err => setStatus(err.message, true)));
+el.clearBtn.addEventListener('click', async () => {
+  clearFilters();
+  await loadLeads().catch(err => setStatus(err.message, true));
 });
-els.searchInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') loadLeads();
+el.searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadLeads().catch(err => setStatus(err.message, true));
 });
 
 restoreApiUrl();
-syncAll().catch(err => {
-  console.error(err);
-  els.leadGrid.innerHTML = `<div class="empty-state">Connection failed. Check the Apps Script URL and deployment settings.</div>`;
-});
+syncAll(true);

@@ -3,7 +3,7 @@
   "short_name": "Blue Lily",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ecf7ff",
+  "background_color": "#eef8ff",
   "theme_color": "#1796E6",
   "icons": [
     {
