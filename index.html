@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1796E6" />
+  <title>Blue Lily WhatsApp Lead Gen</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-card">
+        <img src="assets/blue-lily-logo.jpg" alt="Blue Lily Properties logo" class="brand-logo" />
+        <div>
+          <h1>Blue Lily</h1>
+          <p>WhatsApp Lead Gen</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Backend</h2>
+        <label class="field-label" for="apiUrl">Apps Script URL</label>
+        <input id="apiUrl" class="input" type="text" />
+        <div class="button-row compact">
+          <button id="saveApiBtn" class="btn btn-secondary">Save URL</button>
+          <button id="syncBtn" class="btn btn-primary">Sync Data</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Search & Filters</h2>
+        <label class="field-label" for="searchInput">Search</label>
+        <input id="searchInput" class="input" type="text" placeholder="Name, number, suburb, street, complex" />
+
+        <div class="filter-grid">
+          <div>
+            <label class="field-label" for="suburbFilter">Suburb</label>
+            <select id="suburbFilter" class="input"><option value="">All suburbs</option></select>
+          </div>
+          <div>
+            <label class="field-label" for="streetFilter">Street</label>
+            <select id="streetFilter" class="input"><option value="">All streets</option></select>
+          </div>
+          <div>
+            <label class="field-label" for="complexFilter">Complex</label>
+            <select id="complexFilter" class="input"><option value="">All complexes</option></select>
+          </div>
+          <div>
+            <label class="field-label" for="agencyFilter">Agency</label>
+            <select id="agencyFilter" class="input"><option value="">All agencies</option></select>
+          </div>
+          <div>
+            <label class="field-label" for="statusFilter">Status</label>
+            <select id="statusFilter" class="input"><option value="">All statuses</option></select>
+          </div>
+          <div>
+            <label class="field-label" for="intentFilter">Intent</label>
+            <select id="intentFilter" class="input"><option value="">All intents</option></select>
+          </div>
+          <div>
+            <label class="field-label" for="assignedToFilter">Assigned To</label>
+            <select id="assignedToFilter" class="input"><option value="">All agents</option></select>
+          </div>
+        </div>
+
+        <div class="button-row compact">
+          <button id="searchBtn" class="btn btn-primary">Load Leads</button>
+          <button id="resetBtn" class="btn btn-secondary">Clear</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <section class="topbar">
+        <div>
+          <h2>Lead Dashboard</h2>
+          <p id="subTitle">Connected to your Blue Lily lead database.</p>
+        </div>
+        <div class="stats-wrap">
+          <div class="stat-card"><span>Total</span><strong id="totalLeads">0</strong></div>
+          <div class="stat-card"><span>New</span><strong id="newLeads">0</strong></div>
+          <div class="stat-card"><span>Follow Up</span><strong id="followLeads">0</strong></div>
+          <div class="stat-card"><span>Remove</span><strong id="removeLeads">0</strong></div>
+        </div>
+      </section>
+
+      <section id="leadGrid" class="lead-grid"></section>
+    </main>
+  </div>
+
+  <template id="leadCardTemplate">
+    <article class="lead-card">
+      <div class="lead-head">
+        <div>
+          <h3 class="lead-name"></h3>
+          <p class="lead-address"></p>
+        </div>
+        <span class="status-pill"></span>
+      </div>
+
+      <div class="lead-meta"></div>
+
+      <div class="editor-grid">
+        <div>
+          <label class="field-label">Assigned To</label>
+          <select class="input assigned-select"></select>
+        </div>
+        <div>
+          <label class="field-label">Message Sender</label>
+          <select class="input sender-select"></select>
+        </div>
+        <div>
+          <label class="field-label">Intent</label>
+          <select class="input intent-select"></select>
+        </div>
+        <div>
+          <label class="field-label">Status</label>
+          <select class="input status-select"></select>
+        </div>
+        <div class="full-width">
+          <label class="field-label">Message Preview</label>
+          <textarea class="input message-preview" rows="4" readonly></textarea>
+        </div>
+        <div class="full-width">
+          <label class="field-label">Notes</label>
+          <textarea class="input notes-input" rows="3" placeholder="Add notes"></textarea>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn btn-whatsapp open-wa-btn">WhatsApp</button>
+        <button class="btn btn-secondary copy-btn">Copy Message</button>
+        <button class="btn btn-primary save-btn">Save</button>
+        <button class="btn btn-secondary touch-btn">Save + Contacted</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
