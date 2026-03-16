@@ -3,144 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blue Lily WhatsApp Lead Gen</title>
   <meta name="theme-color" content="#1796E6" />
-  <title>Blue Lily Lead Gen</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
-  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="icon" href="assets/favicon.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="layout">
+  <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand-card">
-        <img src="assets/blue-lily-logo.jpg" alt="Blue Lily Properties logo" class="logo" />
+      <div class="brand-card card">
+        <img src="assets/logo.jpg" alt="Blue Lily Properties" class="brand-logo" />
         <div>
           <h1>Blue Lily</h1>
           <p>WhatsApp Lead Gen</p>
         </div>
       </div>
 
-      <section class="panel">
+      <div class="card section-card">
         <h2>Connection</h2>
-        <label class="label" for="apiUrl">Apps Script URL</label>
-        <input id="apiUrl" class="input" type="text" />
-        <div class="row actions-row">
-          <button id="saveApiBtn" class="btn secondary">Save URL</button>
-          <button id="syncBtn" class="btn primary">Sync</button>
+        <p class="auto-note">Backend is pre-connected automatically.</p>
+        <input id="backendUrl" class="input hidden" type="text" />
+        <div class="button-row">
+          <button id="syncBtn" class="btn btn-primary">Sync Now</button>
         </div>
-        <p id="connectionStatus" class="helper">Ready</p>
-      </section>
+        <p id="connectionStatus" class="status-text">Waiting to sync.</p>
+      </div>
 
-      <section class="panel">
+      <div class="card section-card filters-card">
         <h2>Filters</h2>
         <label class="label" for="searchInput">Search contacts</label>
-        <input id="searchInput" class="input" type="text" placeholder="Name, phone, suburb, street, complex" />
-
-        <div class="filters-grid">
+        <input id="searchInput" class="input" type="text" placeholder="Name, number, suburb, street, complex" />
+        <div class="filter-grid">
           <div>
-            <label class="label">Suburb</label>
-            <select id="suburbFilter" class="input"><option value="">All suburbs</option></select>
+            <label class="label" for="suburbFilter">Suburb</label>
+            <select id="suburbFilter" class="input select"></select>
           </div>
           <div>
-            <label class="label">Street</label>
-            <select id="streetFilter" class="input"><option value="">All streets</option></select>
+            <label class="label" for="streetFilter">Street</label>
+            <select id="streetFilter" class="input select"></select>
           </div>
           <div>
-            <label class="label">Complex</label>
-            <select id="complexFilter" class="input"><option value="">All complexes</option></select>
+            <label class="label" for="complexFilter">Complex</label>
+            <select id="complexFilter" class="input select"></select>
           </div>
           <div>
-            <label class="label">Agency</label>
-            <select id="agencyFilter" class="input"><option value="">All agencies</option></select>
+            <label class="label" for="agencyFilter">Agency</label>
+            <select id="agencyFilter" class="input select"></select>
           </div>
           <div>
-            <label class="label">Status</label>
-            <select id="statusFilter" class="input"><option value="">All statuses</option></select>
+            <label class="label" for="statusFilter">Status</label>
+            <select id="statusFilter" class="input select"></select>
           </div>
           <div>
-            <label class="label">Intent</label>
-            <select id="intentFilter" class="input"><option value="">All intents</option></select>
+            <label class="label" for="intentFilter">Intent</label>
+            <select id="intentFilter" class="input select"></select>
           </div>
           <div>
-            <label class="label">Assigned To</label>
-            <select id="assignedFilter" class="input"><option value="">All agents</option></select>
+            <label class="label" for="assignedFilter">Assigned To</label>
+            <select id="assignedFilter" class="input select"></select>
           </div>
         </div>
-
-        <div class="row actions-row">
-          <button id="loadBtn" class="btn primary">Load Contacts</button>
-          <button id="clearBtn" class="btn secondary">Clear</button>
+        <div class="button-row">
+          <button id="loadBtn" class="btn btn-primary">Load Contacts</button>
+          <button id="clearBtn" class="btn btn-ghost">Clear</button>
         </div>
-      </section>
+      </div>
     </aside>
 
-    <main class="main">
-      <section class="hero panel">
+    <main class="content">
+      <section class="card header-card">
         <div>
           <h2>Contacts</h2>
-          <p id="heroText">Your contacts will show here once synced.</p>
+          <p>Connected to Blue Lily Properties.</p>
         </div>
-        <div class="stats">
-          <div class="stat"><span>Total</span><strong id="statTotal">0</strong></div>
-          <div class="stat"><span>New</span><strong id="statNew">0</strong></div>
-          <div class="stat"><span>Follow Up</span><strong id="statFollow">0</strong></div>
-          <div class="stat"><span>Remove</span><strong id="statRemove">0</strong></div>
+        <div class="stats-grid">
+          <div class="stat-box"><span>Total</span><strong id="statTotal">0</strong></div>
+          <div class="stat-box"><span>New</span><strong id="statNew">0</strong></div>
+          <div class="stat-box"><span>Follow Up</span><strong id="statFollow">0</strong></div>
+          <div class="stat-box"><span>Remove</span><strong id="statRemove">0</strong></div>
         </div>
       </section>
 
-      <section id="cards" class="cards"></section>
+      <section id="messageBar" class="card message-bar hidden"></section>
+      <section id="contactsContainer" class="contacts-grid"></section>
     </main>
   </div>
 
-  <template id="cardTemplate">
-    <article class="card">
-      <div class="card-head">
-        <div>
-          <h3 class="name"></h3>
-          <p class="address"></p>
-        </div>
-        <span class="pill status-pill"></span>
-      </div>
-
-      <div class="meta-grid"></div>
-
-      <div class="editor-grid">
-        <div>
-          <label class="label">Assigned To</label>
-          <select class="input assigned-select"></select>
-        </div>
-        <div>
-          <label class="label">Message Sender</label>
-          <select class="input sender-select"></select>
-        </div>
-        <div>
-          <label class="label">Intent</label>
-          <select class="input intent-select"></select>
-        </div>
-        <div>
-          <label class="label">Status</label>
-          <select class="input status-select"></select>
-        </div>
-        <div class="full-span">
-          <label class="label">WhatsApp Script</label>
-          <textarea class="input message-preview" rows="4" readonly></textarea>
-        </div>
-        <div class="full-span">
-          <label class="label">Notes</label>
-          <textarea class="input notes-input" rows="3" placeholder="Type notes here"></textarea>
-        </div>
-      </div>
-
-      <div class="row actions-row wrap">
-        <button class="btn whatsapp-btn">WhatsApp</button>
-        <button class="btn secondary copy-btn">Copy Script</button>
-        <button class="btn primary save-btn">Save</button>
-        <button class="btn secondary contacted-btn">Save + Contacted</button>
-      </div>
-    </article>
-  </template>
-
+  <script>window.DEFAULT_BACKEND_URL = 'https://script.google.com/macros/s/AKfycby8_ztOajJqYYFQ9CMLJEGKYhus_ECuX8ea03JTtoRtBuEFPsT98SQwGPNeIlO4fIRo/exec';</script>
   <script src="app.js"></script>
 </body>
 </html>

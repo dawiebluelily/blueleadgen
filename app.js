@@ -24,7 +24,6 @@ function bindEls() {
 }
 
 function bindEvents() {
-  els.saveUrlBtn.addEventListener('click', saveBackendUrl);
   els.syncBtn.addEventListener('click', syncAll);
   els.loadBtn.addEventListener('click', loadLeads);
   els.clearBtn.addEventListener('click', clearFilters);
@@ -36,13 +35,11 @@ function getBackendUrl() {
 }
 
 function restoreBackendUrl() {
-  const saved = localStorage.getItem('blueLilyBackendUrl') || window.DEFAULT_BACKEND_URL || '';
-  els.backendUrl.value = saved;
+  els.backendUrl.value = window.DEFAULT_BACKEND_URL || localStorage.getItem('blueLilyBackendUrl') || '';
 }
 
 function saveBackendUrl() {
-  localStorage.setItem('blueLilyBackendUrl', getBackendUrl());
-  setStatus('Backend URL saved.');
+  localStorage.setItem('blueLilyBackendUrl', window.DEFAULT_BACKEND_URL || getBackendUrl());
 }
 
 function setStatus(text, isError = false) {

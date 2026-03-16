@@ -1,20 +1,12 @@
 {
   "name": "Blue Lily WhatsApp Lead Gen",
   "short_name": "Blue Lily",
-  "start_url": "./",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#eef8ff",
+  "background_color": "#dfeef9",
   "theme_color": "#1796E6",
   "icons": [
-    {
-      "src": "assets/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "assets/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
